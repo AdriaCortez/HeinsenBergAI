@@ -1,0 +1,38 @@
+
+services:
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27020:27017"
+
+  backend_portfolio:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./api:/app
+    command: sh -c "npm install && node index.js"
+    ports:
+      - "3846:3846"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/atividade
+    depends_on:
+      - mongo
+
+  backend_gepeto:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./api2:/app
+    command: sh -c "npm install && node server.js"
+    ports:
+      - "3847:3847"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/gepeto
+      - GEPETO_API_AUTH_TOKEN=${GEPETO_API_AUTH_TOKEN}
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:

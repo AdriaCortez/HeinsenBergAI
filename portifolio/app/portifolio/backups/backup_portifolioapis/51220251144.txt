@@ -1,0 +1,194 @@
+
+import { useState } from 'react'; //o Hook UseState monitora os valores que tem no códgo e atualiza tudo automaticamente quando eles mudarem.
+//O Hook useRef vai dar a ordem pro código mostrar o modal
+import { useEffect } from 'react'; 
+import PortifolioForm from "./portifolioForm";
+import PortifolioGrid from "./portifolioGrid";
+
+
+export default function Portifolio() {
+
+  // Estado com apenas um campo (pode adicionar mais depois)
+
+  //Essa constante define o nome completo. Essas constantes não mudam (const). 
+  //O que vai mudar é o que o usuário digitar.
+  const [nomeCompleto, setNomeCompleto] = useState(''); 
+  const [cpf, setCPF] = useState(''); 
+  const [data, setData] = useState(''); 
+  const [registros, setRegistros] = useState<any[]>([]); //função que atualiza o registro, o array pode ter qualquer dado (any) - utilizado no ler() que atualiza os dados na tela
+  const [valoresEditados, setValoreseditados] = useState(null) //essa função atualiza os valores editados 
+  
+  /*"valoresEditados - 
+
+  Uma função chamada "editarDados" vai definir os dados que serão editados, sendo valoresEditados o ID;
+  Essa constante também é utilizada dentro de um if/else no handlesubmit.
+  
+  
+  */ 
+
+  useEffect(() => {
+    ler();
+  }, []) //[] para rodar apenas 1 vez quando o componente for montado
+
+  /*Nota: 'setNomeCompleto', 'setCPF' e 'setData' são funções que o mudam o valor de 'NomeCompleto' 
+  [...] e fazem o react re-renderizar.
+  (Esse é o padrão do hook useState)
+
+  Sem o 'set' o estado não muda mesmo o alterando manualmente. 
+
+  o 'atualizar dados' atualiza os dados enviados pro servidor através do handlesubmit e mostra no front end
+
+  enquanto setValoreseditados for NULL, o react vai saber que não é edição, por isso utilizamos o ifelse
+  
+  */
+
+  //AO clicar no botão '⟳', essa constante troca os valores vazios pelos dados colocados.
+   const editarDados = (registro: any) => {
+    setValoreseditados(registro._id); //ao clicar em editar, o setValoresEditados armazena o valor passado, isso é definido no const usestate.
+    setNomeCompleto(registro.nomeCompleto);
+    setCPF(registro.cpf);
+    setData(registro.data);
+
+    console.log('Editando cadastro...');
+   }
+
+  
+  const handleSubmit = async (e) => { //Handlesubmit é o nome da função, geralmente utilizado em formulários.
+    //'async' determina uma função assíncrona que retronará uma "Promessa" (await)
+    //Imprimem no console da página os campos digitados
+
+    e.preventDefault()
+
+    console.log('Criando registro...')
+    console.log('Nome enviado:', nomeCompleto); 
+    console.log('CPF enviado:', cpf);
+    console.log('Data enviada:', data);
+
+    if(valoresEditados) { //verifica se existe um ID armazenado pelo que foi declarado em editardados
+      console.log('Atualizando registros cadastrados...') //Mostra no console os registros cadastrados
+
+        const api2 = await fetch("http://localhost:3000/update-portifolio", { //chamado da API
+          method: "PUT",
+          headers: {
+         "Content-Type": "application/json", },
+
+          body:  JSON.stringify({nomeCompleto: nomeCompleto, cpf: cpf,  data: data, _id: valoresEditados})
+         });
+
+         const apiresponse = await api2.json();
+         console.log(apiresponse);
+
+
+
+      } else { //se não tiver valores retorna o Save-Portifolio
+    //Cria uma função "response" que envia os dados digitados pro servidor
+     const response = await fetch("http://localhost:3000/save-portifolio", { //Nesse caso, será enviado pra nossa API do express que está rodando na porta 3000
+      /*
+        'await fetch': 
+            - Await espera a função assíncrona terminar antes de continuar o código;
+            - fetch chama uma API, http://localhost:3000/save-portifolio
+      */
+
+    method: "POST", //Vai definir o método HTTP POST. A ação que o cliente deseja realizar. POST cria ou envia dados pro servidor.
+    headers: {
+      "Content-Type": "application/json", 
+    }, //O header diz o que está sendo enviado (um JSON). Diz também que o body (Content-type) tá em JSON
+
+    body:  JSON.stringify({nomeCompleto: nomeCompleto, cpf: cpf,  data: data}),
+  }); //Body  é  o conteúdo enviado ao servidor
+  //Json.stringfy transforma os objetos 'nome...', 'cpf....' em texto JSON. A requisição só pode enviar texto.
+
+    
+     const dataResponse = await response.json(); //await espera o response.json ler o body e pega o que o servidor enviou de volta em JSON.
+     console.log(dataResponse); //mostra o que foi enviado pelo servidor depois de converter.
+     //atualiza os registros com a resposta da API
+
+    }
+
+    //Colocamos os valores vazios para limparmos a tabela toda vez que clicarmos em "salvar"
+
+     setValoreseditados(null);
+     setNomeCompleto("");
+     setCPF("");
+     setData("");
+
+    ler();
+
+    /*Nota:
+    
+    - O "valor editado" foi colocado no lugar de "att" e puxou a API Update Portifolio (que não precisava ser criada novamente)
+    para que o react identificasse a atualização e ela rodasse somente ao clicarmos em "salvar" (que é um botão que faz parte do handlesubmit).
+    Só dá pra saber se é uma edição ou não se:
+
+    O valor editado for igual  ele retorna os campos e "salvar" edita os dados
+    Se o react não identificar nenhum valor, ele cria um dado novo
+
+    EM ambos os casos, os valores se limpam pra que o react não confunda quando se deve salvar ou atualizar.
+
+    */
+   
+  }
+
+    const deleteData = async (_id: any) => {
+      
+        console.log('Deletando linha da tabela...');
+
+        const api3 = await fetch ('http://localhost:3000/delete-portifolio-data', {
+          method: "DELETE",
+          headers: {
+         "Content-Type": "application/json", //IMPORTANTE, a API não reconhece o body sem o header
+        },
+          body: JSON.stringify({ _id }) //o id do documento a ser deletado será passado aqui
+        });
+
+        const deleteData = await api3.json();
+        console.log('ultimo registro deletado da tabela:', deleteData)
+        ler(); //chama a função abaixo pra atualizar a tabela automaticamente
+        
+   }
+
+   const ler = async () => { //essa função também serve pra atualizar a tabela
+         console.log('Verificando dados cadastrados...')
+
+        const api2 = await fetch("http://localhost:3000/read-portifolio", {
+
+          method: "GET", //GET pra ler os dados enviados ao servidor
+
+        });
+ 
+        const lerResposta = await api2.json(); //Pega a resposta da API em JSON
+        console.log('Dados renderizando normalmente na tela') //mostra no console a resposta do servidor, CASO funcione.
+
+        setRegistros(lerResposta); //atualiza os registros com a resposta da API
+   }
+
+  return (
+
+    <>
+
+    <PortifolioForm
+      nomeCompleto={nomeCompleto}
+      cpf={cpf}
+      data={data}
+      setNomeCompleto={setNomeCompleto}
+      setCPF={setCPF}
+      setData={setData}
+      setValoreseditados={setValoreseditados}
+      handleSubmit={handleSubmit}
+      valoresEditados={valoresEditados}
+    
+    
+    />
+    <PortifolioGrid 
+    registros={registros}
+    editarDados={editarDados}
+    deleteData={deleteData}
+    
+    
+    />
+
+    </>
+  
+  ); 
+
+}

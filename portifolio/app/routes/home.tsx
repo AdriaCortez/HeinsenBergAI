@@ -1,0 +1,17 @@
+//Onde ficam as portas
+
+import type { Route } from "./+types/home";
+import Inicio from "../portifolio/inicio";
+
+export function meta({}: Route.MetaArgs) {
+  return [
+    { title: "Portifolio" },
+    { name: "description", content: "Bem vindo ao portifolio de cadastro" },
+  ];
+}
+
+export default function Home() {
+  
+  return < Inicio />
+}
+

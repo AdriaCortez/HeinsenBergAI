@@ -1,0 +1,60 @@
+JSON WEB TOKEN 
+
+Padrão aberto (segundo a RFC 7519) que define uma forma de transmitir informações com segurança entre partes com um objeto JSON.
+Essas informações são verificadas e consideradas confiáveis por serem assinadas digitalmente. O JWT é assinada usando uma chave
+secreta OU um par de chaves públicas/privadas usando RSA* ou ECDSA*.
+
+*RSA: Chaves criptográficas pra transmissão segura de dados.
+*ECDSA: Algoritmo de assinatura digital de curvas elípticas que verifica terceiros sem comprometer a segurança.
+
+O JSON WEB TOKEN é utilizado pra autorização em logins de usuario e transmite informações de segurança. A estrutura do token de uma senha
+criptografado por exemplo é xxxxx.yyyyy.zzzzzz. E representam partes diferentes chamados: cabeçalhos*, carga útil* e assinatura*.
+
+*Cabeçalhos: 
+
+O cabeçalho contém o tipo de token, e o algoritmo de assinatura utilizado como HMAC SHA256* ou RSA.
+
+{
+    "alg": "HS256", //Algoritmo
+    "typ": "JWT"
+}
+
+*HMAC SHA256: é um algoritmo de hash que construído a partir da função de hash SHA-256 e utilizado como um 
+código de autênticação de mensagem baseado em hash. Ele mistura uma chave secreta com os dados da mensagem, faz hashes do resultado 
+com a função de hash, faz hashes do resultado, mistura esse valor com a chave secreta e aplica a função de hash mais uma vez. 
+O hash de saída tem 256 bits de comprimento. O Sha-256 é muito utilizado em projeto de criptomoedas, inclusive o bitcoin.
+
+*CARGA útil
+Contém as declarações (afirmações sobre uma entidade, normalmente o usuário), e existem 3 tipos: as registradas, públicas e privadas.
+
+...das registradas:
+    - iss (emissor);
+    - exp (tempo de expiração);
+    - sub (assunto);
+    - aud (publico alvo)
+
+    entre outros.
+
+...das publicas: Definidas livremente por quem utiliza JWT, entretanto, pra evitar colisões, devem ser definidas no REGISTRO DE JSON WEB
+TOKENS da Iana.
+
+....das privadas: Reinvidicações personalizadas criadas pra compartilhar informações em partes que concordam em utilizá-las e que não São
+nem registradas nem públicas.
+
+exemplo de carga útil:
+
+{
+  "sub": "1234567890",
+  "name": "John Doe",
+  "admin": true
+}
+
+*ASSINATURA: Para criar parte da assinatura é necessário pegar o cabeçalho codificado, a carga útil codigicada,, um secret, o algoritmo
+especificado e assinar tudo isso. Por exemplo, se utilizarmos o algoritmo HMAC SHA a assinatura será criada da seguinte forma:
+
+HMACSHA256: {
+    base64UrlEncode(header) + " . " + base64UrlEncode(payload), secret
+}.
+
+A assinatura verifica se a mensagem não foi alterada durante o processo e, no caso de tokens que possuem chave privada, também
+dá pra verificar se o remetente do JWT é quem diz ser.

@@ -1,0 +1,75 @@
+import PortifolioGrid from "../Renderizados/portifolioGrid";
+import { useEffect, useState } from "react";
+import { useNavigate} from "react-router-dom";
+import { deletado, erro } from "../Notificacoes/torradas";
+
+
+export default function Trabalhos({ setNomeCompleto, setCPF, setData, handleSubmit}: any) {
+
+    const [registros, setRegistros] = useState<any[]>([]);
+    const navigate = useNavigate();
+
+
+     useEffect(() => {
+        ler();
+      }, [])
+
+   
+   const deleteData = async (_id: any) => {
+
+    try {
+      
+        console.log('Deletando linha da tabela...');
+
+        const api3 = await fetch ('http://localhost:3000/delete-portifolio-data', {
+          method: "DELETE",
+          headers: {
+         "Content-Type": "application/json", //IMPORTANTE, a API não reconhece o body sem o header
+        },
+          body: JSON.stringify({ _id }) //o id do documento a ser deletado será passado aqui
+        });
+
+        const deleteData = await api3.json();
+        console.log('ultimo registro deletado da tabela:', deleteData)
+        ler(); //chama a função abaixo pra atualizar a tabela automaticamente
+        deletado()
+
+      } catch {
+        erro()
+
+      }
+        
+   }
+
+   const ler = async () => { //essa função também serve pra atualizar a tabela
+         console.log('Verificando dados cadastrados...')
+
+        const api2 = await fetch("http://localhost:3000/read-portifolio", {
+
+          method: "GET", //GET pra ler os dados enviados ao servidor
+
+        });
+ 
+        const lerResposta = await api2.json(); //Pega a resposta da API em JSON
+        console.log('Dados renderizando normalmente na tela') //mostra no console a resposta do servidor, CASO funcione.
+
+        setRegistros(lerResposta); //atualiza os registros com a resposta da API
+   }
+
+   const editarDados = (registro: any) => {
+    navigate("/portifolio", {
+        state: registro, //muda a rota, guarda o state na memória, carrega o registro no location-state
+    });
+   };
+
+
+   return (
+
+    <PortifolioGrid
+        registros={registros}
+        editarDados={editarDados}
+        deleteData={deleteData} />
+
+   );
+
+   }

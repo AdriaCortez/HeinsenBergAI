@@ -1,0 +1,101 @@
+import PortifolioGrid from "../Renderizados/portifolioGrid";
+import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { deletado, erro } from "../Notificacoes/toasts";
+import { simDeletar } from "../Notificacoes/alertas";
+
+
+export default function Trabalhos({ setNomeCompleto, setCPF, setData, handleSubmit}: any) {
+
+    const [registros, setRegistros] = useState<any[]>([]);
+    const navigate = useNavigate();
+    const location = useLocation();
+
+
+     useEffect(() => {
+        ler();
+      }, [])
+
+     
+  const deleteData = async (_id: any, nome: string) => {
+
+    const confirmarDelete = await simDeletar(nome); 
+
+    if (!confirmarDelete) {
+      return;
+    }
+
+    try {
+      
+        console.log('Deletando linha da tabela...');
+
+        const api3 = await fetch ('http://localhost:3000/delete-portifolio-data', {
+          method: "DELETE",
+          headers: {
+         "Content-Type": "application/json", //IMPORTANTE, a API não reconhece o body sem o header
+        },
+          body: JSON.stringify({ _id }) //o id do documento a ser deletado será passado aqui
+        });
+
+        const deleteData = await api3.json();
+        console.log('ultimo registro deletado da tabela:', deleteData)
+
+        ler()
+        deletado()
+
+       //chama a função abaixo pra atualizar a tabela automaticamente
+        
+
+      } catch {
+        erro()
+
+      }
+        
+   }
+
+
+   const ler = async () => { //essa função também serve pra atualizar a tabela
+         console.log('Verificando dados cadastrados...')
+
+        const api2 = await fetch("http://localhost:3000/read-portifolio", {
+
+          method: "GET", //GET pra ler os dados enviados ao servidor
+
+        });
+ 
+        const lerResposta = await api2.json(); //Pega a resposta da API em JSON
+        console.log('Dados renderizando normalmente na tela') //mostra no console a resposta do servidor, CASO funcione.
+
+        setRegistros(lerResposta); //atualiza os registros com a resposta da API
+   }
+
+   const editarDados = (registro: any) => {
+    navigate("/portifolio", {
+        state: registro, //muda a rota, guarda o state na memória, carrega o registro no location-state
+    });
+   };
+
+
+   const voltar = () => {
+      const from = location.state?.from; 
+
+        if (from === "portifolio") { 
+            navigate ("/portifolio")
+        } else if (from === "inicio") {
+            navigate ("/")
+        } else {
+            navigate (-1)
+        }
+   }
+
+   return (
+
+    <PortifolioGrid
+        registros={registros}
+        editarDados={editarDados}
+        deleteData={deleteData} 
+        voltar={voltar}/>
+
+   );
+
+   }

@@ -1,0 +1,30 @@
+Request for comments - RFC
+
+São documentos técnicos utilizados na engenharia da compitação para padronizar protocolos, alterações de arquitetura, requisições, entre
+outros em busca de uma segurança melhor e mais rápida na Web. Desde os anos 70, esse sistema é gerido pela IETF (Internet Engeneering Task 
+FORCE), que define normas da internet.
+
+Alguns RFCs (HTTP e DNS) chegaram depois do RFC1, entretanto, o formato pdrõ de texto dos documentos foi praticamente inalterado Desde
+a criação do protocolo.
+
+Protocolo	RFC
+UDP	        768 - User Datagram Protocol (envia dados de forma assíncrona, sem garantir entrega, ordem ou integridade de pacotes)
+IP	        791 - Internet Protocol (Conjunto de regras fundamentais para endereçamento e roteamento de dados na internet)
+ICMP	    792 - Internet control Message Protocol (Protocolo fundamental da camada de rede e internet que dispositivos comunicam, problemas)
+TCP	        793 - Transmission Control Protocol (padrão fundamental síncrono que garante entrega ordenada e sem erro de pacotes de dados)
+ARP	        826 - Address Resolution Protocol (Protocolo de comunicação usado para descobrir o controle de acesso MAC associado a um IP específico)
+FTP	        959 - File Transfer Protocol (Protocolo de transferência de arquivos entre um cliente e um servidor - Essencial pra upload e download)
+DNS	        1034 e 1035 - Domain Name System (Permite que os usuários naveguem pela internet usando nomes de HOST - www.algumacoisa.com - em vez de endereços IP)
+MD5      	1321 - Message-Digest Algorithm 5 (criptografa e autentica mensagens, bem como verifica conteúdos e assinaturas difitais)
+POP3    	1939 - Post Office Protocol Version 3 (baixa emails no computador local mesmo  offline por meio de uma conexão TCP/IP)
+HTTP    	1945 - HyperText Transfer Protocol (Protocolo fundamental da web, é a base de qualquer troca de dados na web) 
+DHCP	    2131 - Dynamic Host Configuration Protocol(Automotiza o processo de configuração dos dispositivos conectados a uma rede) 
+IPv6    	2460 - Internet Protocol Version 6 (versão mais recente do IP, permitindo um numero maior de endereços disponíveis e endereça até 340 undecilhões de dispositivos.)
+NAT     	3022 - Network Address Translation (permite que vários dispositivos compartilhem um endereço de IP público)
+SSH     	4251 - Secure Shell (método pra conectar-se a servidores remotos e realizar tarefas admnistrativas; acessa servidoras de forma segura e privada)
+SMTP	    5321 - Simple Mail Transfer Protocol (Padrão para transmitir e-mail por uma rede, funcionando como um carteiro digital)
+
+Quando um novo arquivo é gerado, o nome dele é Request of CHange. Se for aprovado pelo comitê, o documento se torna uma nova RFC com
+uma numeração diferente da RFC anterior que não é excluída.
+
+RFCs são FUNDAMENTAIS para o funcionamento da internet e pra cybersegurança.

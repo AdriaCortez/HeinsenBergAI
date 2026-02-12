@@ -1,0 +1,13 @@
+hash teste 4
+
+Teste 4 = teste4@gmail.com senha 123
+hash gerado:  $2b$10$zJQGjwLGjH8bp232BTG8DOyYhQrgbwUmQLFJriQAimL99GzPACg7e
+
+Teste 5 = teste5@mail.com senha 123
+hash gerado: $2b$10$Fk.D3we7.C6fQFT6l6iz3e2grITvO0vGIzmg9NHJ7/mOFrgC8wkbC
+
+Teste 7 = teste7@mail.com senha 123
+hash gerado: $2b$10$qj7yl37GsJfOQN4zpe7Fh.xAYz7MuHPg1.iEjfw9OIuDWMyFjRpWy
+
+Teste 10 = teste10@mail.com senha 123
+hash gerado = $2b$10$cob.w4Kxb8cEAVkdcbV.5edO2QJgnz24jTMplhUNHkR4uI3.Ow7ri

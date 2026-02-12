@@ -1,0 +1,17 @@
+
+**/node_modules
+**/npm-debug.log
+
+mongo_data/
+**/data/db
+
+**/.env
+**/.env.*
+**/.git
+**/.gitignore
+
+**/dist
+**/build
+
+**/logs
+*.log

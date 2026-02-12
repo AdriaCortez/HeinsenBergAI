@@ -1,0 +1,265 @@
+
+import { useState } from 'react'; //o Hook UseState monitora os valores que tem no códgo e atualiza tudo automaticamente quando eles mudarem.
+//O Hook useRef vai dar a ordem pro código mostrar o modal
+
+export function Portifolio() {
+
+  // Estado com apenas um campo (pode adicionar mais depois)
+
+  //Essa constante define o nome completo. Essas constantes não mudam (const). 
+  //O que vai mudar é o que o usuário digitar.
+
+  const [nomeCompleto, setNomeCompleto] = useState(''); 
+  const [cpf, setCPF] = useState(''); 
+  const [data, setData] = useState(''); 
+  const [registros, setRegistros] = useState<any[]>([]); //função que atualiza o registro, o array pode ter qualquer dado (any)
+  const [carregarDados, setCarregar] = useState(true); //Atualiza o estado carregar dados, sendo false pra não carregar nada de primeira.
+
+
+ 
+  /*Nota: 'setNomeCompleto', 'setCPF' e 'setData' são funções que o mudam o valor de 'NomeCompleto' 
+  [...] e fazem o react re-renderizar.
+  (Esse é o padrão do hook useState)
+
+  Sem o 'set' o estado não muda mesmo o alterando manualmente. 
+
+  o 'atualizar dados' atualiza os dados enviados pro servidor através do handlesubmit e mostra no front end
+  
+  */
+
+  
+  const handleSubmit = async () => { //Handlesubmit é o nome da função, geralmente utilizado em formulários.
+    //'async' determina uma função assíncrona que retronará uma "Promessa" (await)
+    //Imprimem no console da página os campos digitados
+    console.log('Nome enviado:', nomeCompleto); 
+    console.log('CPF enviado:', cpf);
+    console.log('Data enviada:', data);
+
+    //Cria uma função "response" que envia os dados digitados pro servidor
+    const response = await fetch("http://localhost:3000/save-portifolio", { //Nesse caso, será enviado pra nossa API do express que está rodando na porta 3000
+      /*
+        'await fetch': 
+            - Await espera a função assíncrona terminar antes de continuar o código;
+            - fetch chama uma API, http://localhost:3000/save-portifolio
+      */
+
+    method: "POST", //Vai definir o método HTTP POST. A ação que o cliente deseja realizar. POST cria ou envia dados pro servidor.
+    headers: {
+      "Content-Type": "application/json", 
+    }, //O header diz o que está sendo enviado (um JSON). Diz também que o body (Content-type) tá em JSON
+
+    body:  JSON.stringify({nomeCompleto: nomeCompleto, cpf: cpf,  data: data}),
+  }); //Body  é  o conteúdo enviado ao servidor
+  //Json.stringfy transforma os objetos 'nome...', 'cpf....' em texto JSON. A requisição só pode enviar texto.
+
+    
+     const dataResponse = await response.json(); //await espera o response.json ler o body e pega o que o servidor enviou de volta em JSON.
+     console.log(dataResponse); //mostra o que foi enviado pelo servidor depois de converter.
+     //atualiza os registros com a resposta da API
+
+     
+  };
+
+   const deletar = async () => {
+        console.log('Deletando o banco de dados...')
+
+        const api = await fetch("http://localhost:3000/delete-portifolio", {
+        method: "DELETE",
+    }); 
+
+    
+  //Cria uma função que mostrará a resposta disso tudo que aconteceu ali em cima
+
+  const deleteResponse = await api.json();
+  console.log('As credenciais', deleteResponse, 'foram permanentemente deletadas do banco de dados')
+  setRegistros(deleteResponse); //pra limpar a tabela após clicar em deletar
+
+};
+
+   const att = async (_id: any) => {
+        
+        console.log('COnfirmando atualização')
+
+        const api2 = await fetch("http://localhost:3000/update-portifolio", {
+
+          method: "PUT",
+          headers: {
+         "Content-Type": "application/json", },
+
+          body:  JSON.stringify({nomeCompleto: nomeCompleto, cpf: cpf,  data: data, _id})
+        });
+
+        ler(); //atualiza a tabela automaticamente
+        
+   }
+
+    const deleteData = async (_id: any) => {
+      
+        console.log('Deletando linha da tabela...');
+
+        const api3 = await fetch ('http://localhost:3000/delete-portifolio-data', {
+          method: "DELETE",
+          headers: {
+         "Content-Type": "application/json", //IMPORTANTE, a API não reconhece o body sem o header
+        },
+          body: JSON.stringify({ _id }) //o id do documento a ser deletado será passado aqui
+        });
+
+        const deleteData = await api3.json();
+        console.log('ultimo registro deletado da tabela:', deleteData)
+        ler(); //chama a função abaixo pra atualizar a tabela automaticamente
+        
+   }
+
+   const ler = async () => { //essa função também serve pra atualizar a tabela
+        setCarregar(true); //Aí o estado carregar muda pra "verdadeiro" ao clicar no botão e carrega os dados enviados pra API
+        console.log('Verificando dados cadastrados...')
+
+        const api2 = await fetch("http://localhost:3000/read-portifolio", {
+
+          method: "GET", //GET pra ler os dados enviados ao servidor
+
+        });
+ 
+        const lerResposta = await api2.json(); //Pega a resposta da API em JSON
+        console.log('Dados renderizando normalmente na tela') //mostra no console a resposta do servidor, CASO funcione.
+
+        setRegistros(lerResposta); //atualiza os registros com a resposta da API
+   }
+
+
+  return (
+    <section className="max-w-2xl mx-auto py-10">
+      <h1 className="text-4xl font-bold mb-8">
+        Bem-vindo! Cadastre seu portfólio
+      </h1>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-lg font-medium mb-2">
+            Nome completo
+          </label>
+          <input
+            type="text"
+            value={nomeCompleto}
+
+             /*O valor colocado no input é controlado pelo react que define o "nomeCompleto"*/
+
+            onChange={(e) => setNomeCompleto(e.target.value)} 
+
+            /*onChange = É um evento do react que dispara cada vez que o usuário digita alguma letra e atualiza o estado*/
+            /*e = evento/objeto do eventoAC, target = objeto, value = é o que o usuário colocou*/
+
+            placeholder="Digite seu nome completo"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+          <label className='block text-lg font-medium mb-2'>
+            CPF
+          </label>
+          <input 
+            type='number'
+            value={cpf}
+            onChange={(e) => setCPF(e.target.value)}
+            placeholder="Digite seu CPF"
+
+          />
+          <label className='block text-lg font-medium mb-2'>
+            Data de nascimento
+          </label>
+          <input 
+            type='date'
+            value={data}
+            onChange={(e) => setData(e.target.value)}
+            placeholder="Coloque sua data de nascimento"
+
+          
+          />
+
+        </div>
+
+        <div className="flex gap-4 display-flex">
+          <button
+            type="button" onClick={handleSubmit}
+            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            Cadastrar
+          </button>
+
+          <button
+            type="button" onClick={deletar}
+            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            Deletar 
+          </button>
+
+          <button
+            type="button" onClick={att}
+            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            Atualizar cadastro
+          </button>
+
+          <button type="button" onClick={ler} 
+          className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          > Mostrar cadastros
+          </button>
+
+          
+        </div>
+
+      </form>
+
+      {registros.length > 0 && ( //Mostra tabela se tamanho dos registros for maior que 0
+
+        <table className='w-full mt-8 border'> {/*Renderiza a tabela */}
+          <thead> {/*Mostra o cabeçalho da tabela */}
+            <tr> {/*linha da tabela */}
+              <th className='border p-2'>Nome cadastrado:</th>
+              <th className='border p-2'>CPF cadastrado:</th>
+              <th className='border p-2'>Data de nascimento cadastrada:</th>
+              <th className='border p-2'>Ações</th>
+
+            </tr>
+          </thead>
+
+          <tbody> {/*Renderiza o restante da tabela */}
+            {registros.map((registro, index) => ( /*
+
+              'registros': é um array (documento de qualquer dado) que tem o retorno dos dados da API
+              'map': é uma função do Javascript que percorre os registros feitos e pra casa registro ele 
+              cria um campo na tabela
+              'registro': é cada nome preenchido no formulário
+              'index': é o índice de cada registro, ou seja, 
+              nomeCompleto = index 0, cpf index = 1, [...]
+
+            */
+              <tr key={index} className='hover: bg-black-50'> {/*
+                key = é usado pelo react pra identificar cada linha da tabela
+              
+              */}
+                <td className='border p-2'>{registro.nomeCompleto}</td> {/* td é a célula da tabela */}
+                <td className='border p-2'>{registro.cpf}</td>
+                <td className='border p-2'>{registro.data}</td>
+                <td className='border p-2'>
+                   <button
+                    type="button" onClick={() => deleteData(registro._id)}
+                    className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                    Excluir
+                  </button>
+                </td>
+
+              </tr> //linha da tabela
+            ))}
+          </tbody>
+
+
+        </table>
+
+      )}
+
+
+
+    </section>
+  );
+}

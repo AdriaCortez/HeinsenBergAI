@@ -1,0 +1,16 @@
+Lista de status HTTPs que são utilizados por padrão e definidos pla RFC para operabilidade de vários sistemas.
+
+    200 OK
+    201 Created
+    401 Unauthorized
+    403 Forbidden
+    404 Not Found
+    418 I'm a Teapot (o servidor não coa cafés em bules de chá)
+    500 Internal Server Error
+
+
+Respostas Informativas (100 – 199)
+Respostas bem-sucedidas (200 – 299)
+Mensagens de redirecionamento (300 – 399)
+Respostas de erro do cliente (400 – 499)
+Respostas de erro do servidor (500 – 599)

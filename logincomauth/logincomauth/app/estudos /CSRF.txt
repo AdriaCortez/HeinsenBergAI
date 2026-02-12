@@ -1,0 +1,4 @@
+CSRF é um Cross Site Request Forgery, ou seja, uma falsificação de requisição entre sites.
+É um ataque vindo de outro site, onde uma requisição se pssa pelo usuário e utiliza o login sem ele perceber. 
+Para isso acontecer, não é necessário nenhunm token. O ponto do ataque são cookies que sçai enviados automaticamente.
+Ao utilizar "samesite" dentro de um cookie, ele configura as permissões de segurança do cookie, podendo ser lax, strict ou none.

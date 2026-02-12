@@ -1,0 +1,205 @@
+import express from 'express'
+import mongoose from 'mongoose';
+import cors from "cors";
+import { ObjectId } from 'mongodb';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const app = express(); 
+const port = process.env.PORT || 3846; 
+
+const { Schema, model } = mongoose;
+
+const portifolioSchema = new Schema({
+  nomeCompleto: String,
+  cpf: String,
+  data: String,
+});
+const mensagemSchema = new Schema({
+  campoDigitado: String,
+})
+
+const Portifolio = model('Portifolio', portifolioSchema); //Define que o nome do model é portifolio usando um schema específico
+const Mensagens = model('Mensagens', mensagemSchema);
+
+const uri = process.env.MONGO_URI;
+const KEY = process.env.GEPETO_API_KEY;
+
+console.log("Dotenv functionando na porta:", port);
+
+app.use(express.json()); 
+app.use(cors({
+  origin: [ 
+    "http://localhost:5173",
+    "http://localhost:3846",
+    "http://localhost",
+
+  ],
+  methods: ["GET", "POST", "DELETE", "PUT"],
+}));
+
+app.options("/delete-portifolio", cors());
+
+
+app.get('/', (req, res) => {
+  res.send('Hello World!')
+});
+
+app.post('/save-portifolio', async (req, res) => { 
+  try { 
+   const portifolio = await Portifolio.create({ 
+      nomeCompleto: req.body.nomeCompleto, //re.body é o corpo da requisição.
+      cpf: req.body.cpf,
+      data: req.body.data,
+    });
+
+    console.log('Portifolio Criado:', portifolio); //se tudo der certo o schema "portifolio" vai ser criado 
+
+    res.json({
+      message: "Portifólio salvo!",
+      portifolio,
+    }); //O servidorr manda uma mensagem no formato Json pra informar que o portifolio foi salvo.
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Erro ao salvar", error: err });
+  }
+}); 
+
+app.post('/nova-mensagem', async (req, res) => {  //mensagem pro gepeto
+
+    try { 
+        const mensagem = await Mensagens.create({ //me = mensagem enviada
+        campoDigitado: req.body.campoDigitado, 
+    });
+
+    console.log('Mensagem enviada:', mensagem); 
+
+    res.json({
+      message: "MENSAGEM ENVIADA COM SUCESSO!", 
+      mensagem,
+
+    }); 
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Erro ao enviar mensagem (500)", error: err });
+  }
+}); 
+
+app.post('/gepeto', async (req, res) => { 
+  
+  console.log('Conectando com o GEPETO API...')
+
+    try { 
+      const resposta = await fetch('http://geppetto.cfq.org.br:44401/api/message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization': `Bearer ${KEY}`,
+        },
+
+        body: JSON.stringify({
+          message: req.body.campoDigitado,
+
+
+        })
+
+      });
+
+      const ok = await resposta.json();
+      console.log('Resposta recebida:', ok)
+      res.json(ok);
+
+    
+
+
+    } catch (err) {
+    res.status(500).json({message: "Erro ao receber resposta (500)", error: err});
+
+    }
+    
+}); 
+
+
+app.delete('/delete-portifolio-data', async (req, res) => {
+  try { 
+    const idDelete = req.body._id;
+    const portifolio = await Portifolio.findByIdAndDelete(idDelete); //o banco vai deletar o último dado criado com o sort
+
+    if(!portifolio) {
+          return res.status(404).json({ message: "Cadastro não encontrado, conferir console."})
+    } 
+    console.log('Portifolio deletado da tabela', portifolio); //mostra no console a operação realizada 
+
+    res.json({
+      message: "Portifólio deletado da tabela!", portifolio,
+    }); 
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Erro ao deletar. Tente novamente", error: err });
+  }
+});
+app.put('/update-portifolio', async (req, res) => {
+  try {
+
+     const idUpdate = req.body._id;
+     const atualizacao = await Portifolio.findByIdAndUpdate(
+      idUpdate,
+      {
+        nomeCompleto: req.body.nomeCompleto,
+        cpf: req.body.cpf,
+        data: req.body.data,
+      }, 
+
+      {
+         new: true
+      }
+    );
+
+    console.log('Atualizado com sucesso', atualizacao);
+    res.json(atualizacao); 
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({message:"Erro ao tentar falar com GEPETO", error: err});
+  }
+});
+
+app.get('/read-portifolio', async (req, res) => {
+  try {
+     const achado = await Portifolio.find( //find é uma função do mongoose
+      {}, //Aqui ele vai tentar encontrar todos os cadastros criados
+
+     );
+
+    console.log('Documento criado:', achado); //retorna no console
+    res.json(achado);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({message:"Erro: Não foi possível fazer a leitura do portifólio enviado. Tente novamente", 
+    error: err});
+  }
+});
+
+async function start() {
+  try { 
+
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 15000,
+    });
+    console.log("Mongoose conectado com sucesso!");
+
+    app.listen(port, '0.0.0.0', () => {
+      console.log(`Express na porta ${port}`);
+    }); 
+  } catch (err) {
+    console.error("Erro ao conectar ao MongoDB:", err);
+  } 
+}
+
+
+//Inicia o servidor
+start();
