@@ -70,6 +70,35 @@ function auth (req, res, next){
   }
 }
 
+function authOpcional (req, res, next) {
+  const token = req.cookies?.auth;
+
+  if(!token) {
+    return next() //pra passar sem usuário
+  }
+
+  try { 
+      
+      const decoded = jwt.verify(token, access); 
+      req.userId = decoded.id;
+  
+    } catch (err) {
+      console.log("Token invalido. Seguindo como anônimo.")
+    }
+
+    next();
+  
+}
+
+ app.get('/validar', authOpcional, (req, res) => {
+  if(!req.userId) {
+    return res.json({ user: null });
+  }
+
+  res.json({ user: req.userId });
+ }) //rota que verifica pro front
+
+
 app.get('/st', auth, async (req, res) => { //eu não me lembro porque coloquei st, ignorem
   try {
 
@@ -101,9 +130,6 @@ app.post('/subscribe', async (req, res) => {
       }); //Se não tiver nenhum vai retornar um status 400
     } 
 
-    if(err.code === 11000) {
-      return res.status(400).json({ error: "Email já cadastrado" })
-    }
 
     const hash = await bcrypt.hash(senha, 10);
 
@@ -119,6 +145,11 @@ app.post('/subscribe', async (req, res) => {
     });
 
   } catch (err) {
+
+    if(err.code === 11000) {
+      return res.status(400).json({ error: "Conta já cadastrada "})
+    }
+    
     console.error("ERRO NO SUBSCRIBE:", err);
     return res.status(500).json({ 
       message: "Erro interno", 
@@ -181,6 +212,16 @@ app.post('/auth-login', async (req, res) => {
     });
   } //se der um crash na rota, retorna um erro 500
 });
+
+app.post("/logout", (req, res) => {
+  res.clearCookie("auth", {
+    httpOnly: true,
+    secure: false, //isso aqui so funciona se o cookie criado tambem tiver secure: false
+    sameSite: "lax",
+  })
+
+  return res.json({ message: "Logout realizado com sucesso" })
+})
 
 
 app.put('/trocarsenha', auth, async (req, res) => {

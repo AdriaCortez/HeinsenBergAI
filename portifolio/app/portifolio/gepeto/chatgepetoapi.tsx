@@ -23,55 +23,23 @@ export default function Chat() {
 
     useEffect(() => { //useEffect pra rodar só quando o código for montado.
 
-        const params = new URLSearchParams(window.location.search); //procura os parâmetros passados pela url
-        const userURI = params.get('user'); //busca o usuário 
-        const action = params.get('action'); //Busca se o usuário tá logado através da ação (login ou logout)
-        const stored = localStorage.getItem("user");
-
-        if(userURI === 'logout' || action === 'logout') {
-            console.log("DESLOGADO! - Removendo dados...")
-            localStorage.removeItem("user");
-            localStorage.removeItem("token");
-
-            navigate('/enter');
-            return;
-        }
-
-        if(userURI) {
-
-            try {
-
-            const URIid = JSON.parse(decodeURIComponent(userURI)); //decodifica os dados passados na url
-            
-            setUser(URIid); 
-            localStorage.setItem("user", JSON.stringify(URIid)); //salva os dados para não se perderem se a página for atualizada
-
-            window.history.replaceState({}, document.title, "/chat"); } catch (err) {
-                console.error("Erro processando os dados do usuário:", err)
-            } //window.history.replaceState({}, document.title, "/chat") limpa a URL depois de processar os dados do usuário.
-            
-            //limpa a url
-
-        } else if(stored) {
-
-            try {
-            setUser(JSON.parse(stored)) } catch (err) {
-                console.log("Erro com os dados do localStorage:", err)
-            }
-            
-            //se não tiver na url, ele tenta no que tá no localStorage
-        }
+        fetch("http://localhost:7777/validar", {
+            credentials: "include"
+        })
+        .then(res => res.json())
+        .then(data => {
+            setUser(data.user);
+        });
 
     }, []);
 
     useEffect(() => {
-        const token = localStorage.getItem("token")
 
-        if(token) {
+        if(user) {
             Historico();
         }
-
-    }, []);
+    
+    }, [user]);
 
    const RespostaDaApi = async (_id: any) => {
          console.log('Verificando dados cadastrados...')
@@ -79,7 +47,7 @@ export default function Chat() {
     try {
 
         const tscpcndc = await fetch(`http://localhost:3847/gepeto/${_id}`, { //tspcndc = To Sem Criatividade Pra Criar o Nome Dessa Const
-
+          credentials: "include",
           method: "GET", //GET pra ler os dados enviados ao servidor
 
         });
@@ -120,7 +88,7 @@ export default function Chat() {
 
        const apiMensagem = await fetch ('http://localhost:3847/chat/nova-mensagem', {
         method: "POST", //Campo para enviar a mensagem para a API 
-
+        credentials: "include",
         headers: {
        "Content-Type": "application/json",
       },
@@ -149,19 +117,18 @@ export default function Chat() {
 
  const Historico = async () => {
     
-    const token = localStorage.getItem("token")
-    if(!token) {
+    if(!user) {
         console.log('Não há usuário.')
         return;
-
     } 
 
     try {
         const historyApi = await fetch("http://localhost:3847/chat/historico", {
         method: 'GET',
+        credentials: "include",
         headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            
         }
 
         });
@@ -186,6 +153,18 @@ export default function Chat() {
     
  }
 
+   const logout = async () => {
+    await fetch("http://localhost:7777/logout", {
+        method: "POST",
+        credentials: "include"
+    });
+
+    setUser(null);
+    navigate("/");
+    
+   }
+
+
  const voltar = () => {
       const from = location.state?.from; 
 
@@ -209,15 +188,6 @@ export default function Chat() {
     navigate ("/perfil")
 
    }
-
-   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("user");
-    setUser(null);
-    navigate("/");
-   }
-
     return (
         <>
         < ChatRenderizado  

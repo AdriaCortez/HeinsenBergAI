@@ -13,6 +13,7 @@ const port = 3847;
 const KEY = process.env.GEPETO_API_KEY;
 const TOKEN = process.env.GEPETO_API_AUTH_TOKEN;
 const uri = process.env.MONGO_URI_GEPETO;
+const access = process.env.ACCESS_TOKEN_TEST;
 
 const { Schema, model } = mongoose;
 
@@ -54,10 +55,11 @@ app.use(cors({
 
   ],
   methods: ["GET", "POST", "DELETE", "PUT"],
+  credentials: true
 }));
 
-function auth (req, res, next) {
-   const token = req.cookies.auth; //autenticação do token é feita com cookies
+function authObrigatorio (req, res, next) {
+   const token = req.cookies?.auth; //autenticação do token é feita com cookies
   
     if(!token) {
       return res.status(401).json({ error: "não autenticado" })
@@ -66,42 +68,46 @@ function auth (req, res, next) {
     try { 
       
       const decoded = jwt.verify(token, access); 
-  
       req.userId = decoded.id;
-      next(); //next passa para o próximo middleware
+      next();
   
     } catch (err) {
       return res.status(401).json({ error: "Token inválido"});
     }
 }
 
- app.post('/chat/nova-mensagem', auth, async (req, res) => {  
+function authOpcional (req, res, next) {
+  const token = req.cookies?.auth;
 
-    let userId = null;
-    const auth = req.headers.authorization;
+  if(!token) {
+    return next() //pra passar sem usuário
+  }
 
-    if(auth) {
-      try {
-        const token = auth.split(" ")[1];
-        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_TEST);
-        userId = decoded.id;
-      } catch (err) {
-
-        console.log("Como não há usuário, o histórico não está sendo salvo.")
-
-      }
+  try { 
+      
+      const decoded = jwt.verify(token, access); 
+      req.userId = decoded.id;
+  
+    } catch (err) {
+      console.log("Token invalido. Seguindo como anônimo.")
     }
+
+    next();
+  
+}
+
+ app.post('/chat/nova-mensagem', authOpcional, async (req, res) => {  
 
     try { 
      const mensagem = await Mensagens.create({ 
-        userId: userId,
+        userId: req.userId || null,
         campoDigitado: req.body.campoDigitado, 
     });
 
-    if (userId) {
+    if (req.userId) {
 
       await Historico.create({
-      userId,
+      userId: req.userId,
       role: "user",
       content: req.body.campoDigitado
     }) //cria um historico
@@ -122,23 +128,7 @@ function auth (req, res, next) {
   }
 }); 
 
-app.get('/gepeto/:id', async (req, res) => { 
-
-  let userId = null;
-  
-  const auth = req.headers.authorization;
-
-    if(auth) {
-      try {
-        const token = auth.split(" ")[1];
-        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_TEST);
-        userId = decoded.id;
-      } catch (err) {
-
-        console.log("Como não há usuário, o histórico não está sendo salvo.")
-
-      }
-    }
+app.get('/gepeto/:id', authOpcional, async (req, res) => { 
   
   console.log('Conectando com o GEPETO API...')
 
@@ -196,10 +186,10 @@ app.get('/gepeto/:id', async (req, res) => {
 
       //Nota; Response não foi declaradio porque veio do servidor.
 
-      if(userId) {
+      if(req.userId) {
 
       await Historico.create({
-        userId,
+        userId: req.userId,
         role: "gepeto",
         content: texto
       }); //cria um historico
@@ -213,7 +203,7 @@ app.get('/gepeto/:id', async (req, res) => {
     } //se NADA der certo, dá erro 500
 }); 
 
-app.get('/chat/historico', autenticarToken, async (req, res) => {
+app.get('/chat/historico', authObrigatorio, async (req, res) => {
   try {
     const historico = await Historico.find({ userId: req.userId})
     .sort({ createdAt: -1 }); //ordena do mais recente pro mais antigo
