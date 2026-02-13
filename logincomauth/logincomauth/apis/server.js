@@ -90,12 +90,28 @@ function authOpcional (req, res, next) {
   
 }
 
- app.get('/validar', authOpcional, (req, res) => {
-  if(!req.userId) {
-    return res.json({ user: null });
+ app.get('/validar', authOpcional, async (req, res) => {
+  try {
+
+    console.log("USER ID:", req.userId);
+
+    if (!req.userId) {
+      return res.json({ user: null });
+    }
+
+    const usuario = await Credenciais.findById(req.userId).select("-senha");
+
+    if(!usuario) {
+      return res.json({ user: null });
+    }
+
+    return res.json({ user: usuario});
+    
+  } catch (err) {
+    console.error("Erro no /validar:", err);
+    return res.status(500).json({ error: "Erro interno"});
   }
 
-  res.json({ user: req.userId });
  }) //rota que verifica pro front
 
 

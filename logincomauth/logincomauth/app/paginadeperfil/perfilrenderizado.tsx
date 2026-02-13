@@ -16,18 +16,6 @@ export default function PerfilRenderizado(config: any) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const stateUser = location.state?.user;
-    const storedUser = localStorage.getItem("user");
-    const user = stateUser ?? (storedUser ? JSON.parse(storedUser) : null);
-
-    setUser(user);
-
-    if (!user) {
-      navigate("/login");
-    }
-  }, [location.state, navigate]);
-
   return (
     <div className="flex flex-col h-screen bg-black text-gray-100 font-sans overflow-hidden">
       
